@@ -5,8 +5,9 @@
 ### Install Pytorch3d
 pytorch3d https://github.com/facebookresearch/pytorch3d/blob/main/INSTALL.md
 
-conda create -n pytorch3d python=3.9
-conda activate pytorch3d
+#### Or follow:
+conda create -n pytorch3d python=3.9 \\
+conda activate pytorch3d \\
 conda install pytorch=1.13.0 torchvision pytorch-cuda=11.6 -c pytorch -c nvidia
 conda install -c fvcore -c iopath -c conda-forge fvcore iopath
 conda install -c bottler nvidiacub
