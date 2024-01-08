@@ -1,0 +1,114 @@
+mode: train  # mode, i.e. train, val, predict,
+save_dir:  # path to save directory
+dataset_path: /media/training_lake/bop_datasets 
+dataset: ycbv #lmo # dataset name
+train_set_types: [train_pbr, train_real]
+test_set_types: [test]
+
+debug: false #false #false #true #false #true #false  # (bool) enable debug mode, uses smaller dataset
+det_dataset:  fcos #bop #faster_rcnn_zebra #fcos_zebraTrue # (str) dataset to use for detection 
+ablation: false #true
+ensemble: false #true # (bool) use ensemble of models
+obj_id: [5,6,8,9,10,11,12] # starting with 1
+
+# Train settings -------------------------------------------------------------------------------------------------------
+project: debug #lmo #ablation #lmo # ycbv #ycbv # project name
+name: mvitv2token_large_fcos  # (str) name 
+model: 
+resume: False #False # resume training from checkpoint
+reduce: 1 #400 # (int) factor by which to reduce the samples in training set
+epochs: 25 #110 #j30 #35 #120 #60 #120 #100 #0 #100  # number of epochs to train for
+batch: 18 #24 #87 #18  #114 #44 #18 #114 #90 #72 #96 #48 #21 #33 #42 #48 #96 #96 # number of images per batch (-1 for AutoBatch)
+device: cpu #1,2,3 # device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu
+patience: 55  # epochs to wait for no observable improvement for early stopping of training
+imgsz: [480, 640]  # size of input images as integer or w,h
+inp_size: 224
+save: True  # save train checkpoints and predict results
+save_period: -1 # Save checkpoint every x epochs (disabled if < 1)
+optimizer: AdamW  # (str) optimizer to use, choices=[SGD, Adam, Adamax, AdamW, NAdam, RAdam, RMSProp, auto]
+verbose: True  # (bool) whether to print verbose output
+cos_lr: False # (bool) use cosine learning rate scheduler
+workers: 32  # (int) number of worker threads for data loading (per RANK if DDP)
+plots: True  # (bool) plot training results
+shuffle: True # (bool) shuffle dataset 
+dn: False #True # (bool) use denoising network
+amp: False # (bool) use automatic mixed precision
+
+# Val/Test settings ----------------------------------------------------------------------------------------------------
+val: True  # (bool) validate/test during training
+val_period: 1  # (int) epochs between validation runs
+split: val  # (str) dataset split to use for validation, i.e. 'val', 'test' or 'train'
+half: False # (bool) use FP16 half-precision training
+final_val: false
+save_csv: True # (bool) save results in bop format to csv
+metrics: [ang, trans,z, adds, adi] # (list) metrics to compute in eval if verbose
+
+# Hyperparameters ------------------------------------------------------------------------------------------------------
+lr0: 0.00005  #0.00011  # (float) initial learning rate (i.e. SGD=1E-2, Adam=1E-3) lrf: 0.005 #0.5  # (float) final learning rate (lr0 * lrf) momentum: 0.937  # (float) SGD momentum/Adam beta1 weight_decay: 0.0005  # (float) optimizer weight decay 5e-4 warmup_epochs: 0.1 #2.0  # (float) warmup epochs (fractions ok)
+lrf: 0.1 #
+momentum: 0.937
+weight_decay: 0.05
+warmup_epochs: 0.1
+warmup_momentum: 0.8
+warmup_bias_lr: 0.0
+nbs: 64 #128  # (int) nominal batch size
+
+
+# Dataset settings
+scale_bbox: 1.2 #2 # scale the sze of the bboxs
+pad_to_square: False #True # (bool) pad image to square with zeros
+use_obj_bbox: False #True #False #True #False #  True # False #True # (bool) use object bounding box for cropping, otherwise use visble bounding box
+center_obj: False # (bool) transform object to its center of mass
+num_points: 3000 # (int) number of points to sample from point cloud to feed into pm loss
+aug: True # (bool) use data augmentation
+box_aug_prob: 0.7 # (float) probability of using box augmentation
+box_aug_sigma: 0.2 #0.3 # (float) sigma for box augmentation
+color_aug_prob: 0.7 #0.7 (float) probability of using color augmentation
+color_aug_code: [
+        "Sometimes(0.5, CoarseDropout((0.2, 0.3), size_percent=0.03, per_channel=0) )",
+        "Sometimes(0.4, GaussianBlur((0., 4.)))",
+        "Sometimes(0.3, pillike.EnhanceSharpness(factor=(0., 10.)))",
+        "Sometimes(0.3, pillike.EnhanceContrast(factor=(0.2, 10.)))",
+        "Sometimes(0.5, pillike.EnhanceBrightness(factor=(0.1, 3.)))",
+        "Sometimes(0.3, pillike.EnhanceColor(factor=(0., 20.)))",
+        "Sometimes(0.5, Add((-15, 15), per_channel=0.3))",
+        "Sometimes(0.5, Multiply((0.7, 1.3), per_channel=0.5))",
+        "Sometimes(0.1, AdditiveGaussianNoise(scale=10, per_channel=True))",
+        "Sometimes(0.1, Invert(0.2, per_channel=False))",
+        "Sometimes(0.5, iaa.contrast.LinearContrast((0.5, 2.2), per_channel=0.3))",
+        ]  
+
+# Model settings
+bbox_emb_dim: 64 # (int) dimension of bbox embedding
+num_classes: 15 #0 #21 # (int) number of classes
+class_emb_dim: 64 # (int) dimension of class embedding
+pool_dim: 1 #4 # (int) dimension of pooled features
+d_model: 1152 #768 #2048 # (int) dimension of model
+disentangle: True # (bool) disentangle r/t
+
+z_type: rel #abs ########## #rel # (str) type of z to use
+z_test: true #false #########
+trans_type: centroid_z # (str) 
+rot_type: allo_rot6d #allo_axis_angle   # {allo/ego}_{quat/rot6d/log_quat/lie_vec}
+
+
+# Loss settings
+num_pm_points: 3000
+pm_loss_sym: true #false  # use symmetric pm loss
+pm_r_only: true  # only do r loss in pm
+pm_disentangle_t: false  # disentangle r/t
+pm_disentangle_z: false  # disentangle r/xy/z
+pm_t_use_points: true
+pm_norm_by_diameter: false #normalizes pm loss by diameter of object
+pm_lw: 1 #0.5 #1 # (float) weight for point matching loss
+detach_trans: true # detaches translation before calculating rotation
+centroid_loss_type: l1 # l1 | l2 | mse
+centroid_lw: 1.0 # (float) weight for centroid loss
+z_loss_type: l1 # l1 | l2 | mse
+z_lw: 1.0 # (float) weight for z loss
+
+rot_loss_type: "angular"  # angular | l2
+rot_lw: 0.0 # (float) weight for angular loss
+trans_lw: 0.0 # (flaot) weight for translation loss
+
+cls_lw: 0.0 #1.0 # (float) weight for classification loss
